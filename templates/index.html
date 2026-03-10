@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barbería Elite</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+    <h1>💈 DELACOS BARBER SHOP</h1>
+    <p>Reserva tu cita fácil y rápido</p>
+</header>
+
+<div class="container">
+
+    {% if error %}
+    <div class="alerta">{{ error }}</div>
+    {% endif %}
+
+    {% if confirmacion %}
+    <div class="confirmacion">
+        <h3>✅ ¡Cita reservada con éxito!</h3>
+        <p>Guarda tu código: <strong class="codigo-highlight">{{ confirmacion.codigo }}</strong></p>
+        <p>👤 {{ confirmacion.nombre }} &nbsp;|&nbsp; ✂️ {{ confirmacion.servicio }}</p>
+        <p>📅 {{ confirmacion.fecha }} &nbsp;|&nbsp; 🕐 {{ confirmacion.hora }}</p>
+        <p class="aviso-codigo">⚠️ Necesitarás este código para cancelar tu cita.</p>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <h2>📅 Nueva Reserva</h2>
+        <form action="/reservar" method="POST">
+            <label>Nombre</label>
+            <input type="text" name="nombre" placeholder="Tu nombre completo" required>
+
+            <label>Teléfono</label>
+            <input type="text" name="telefono" placeholder="Ej: 3001234567" required>
+
+            <label>Servicio</label>
+            <select name="servicio">
+                <option value="Corte">✂️ Corte - $25.000</option>
+                <option value="Barba">🪒 Barba - $10.000</option>
+                <option value="Corte y Barba">✂️🪒 Corte + Barba - $35.000</option>
+            </select>
+
+            <label>Fecha</label>
+            <input type="date" name="fecha" id="fecha" min="{{ hoy }}" required>
+
+            <label>Hora disponible</label>
+            <select name="hora" id="hora">
+                <option value="">-- Selecciona una fecha primero --</option>
+            </select>
+
+            <button type="submit" class="btn btn-reservar">✅ Confirmar Reserva</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>❌ Cancelar Cita</h2>
+        <div>
+            <label>Código de tu cita</label>
+            <input type="text" id="input-codigo" placeholder="Ej: 3186">
+            <button type="button" class="btn btn-cancelar" onclick="abrirModal()">
+                🗑️ Cancelar Cita
+            </button>
+        </div>
+        <form id="form-cancelar" action="/cancelar" method="POST">
+            <input type="hidden" name="codigo" id="codigo-oculto">
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>📋 Citas Reservadas</h2>
+        {% if citas %}
+            {% for cita in citas %}
+            <div class="cita-item">
+                <div class="cita-info">
+                    <strong>{{ cita.nombre }}</strong>
+                    <span>📞 {{ cita.telefono }}</span>
+                    <span>✂️ {{ cita.servicio }}</span>
+                    <span>📅 {{ cita.fecha }} — 🕐 {{ cita.hora }}</span>
+                </div>
+                <div class="badge-codigo">{{ cita.codigo }}</div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-citas">No hay citas registradas aún.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div class="modal-icon">🗑️</div>
+        <h3 class="modal-titulo">¿Cancelar esta cita?</h3>
+        <p class="modal-texto">Esta acción no se puede deshacer.<br>
+        La cita con código <strong id="modal-codigo" class="codigo-highlight"></strong> será eliminada.</p>
+        <div class="modal-botones">
+            <button class="btn btn-cancelar" onclick="confirmarCancelacion()">Sí, cancelar</button>
+            <button class="btn btn-cerrar" onclick="cerrarModal()">No, volver</button>
+        </div>
+    </div>
+</div>
+
+<footer>
+    <span id="admin-trigger" ondblclick="window.location.href='/admin'">
+        💈 Barbería Elite — Lunes a Sábado 9:00 - 18:00 — Calle 20 #15-30
+    </span>
+    <br>Hecho con <span style="color:#b80000">♥</span> para nuestros clientes
+</footer>
+
+<script>
+document.getElementById("fecha").addEventListener("change", function() {
+    const fecha = this.value;
+    const selectHora = document.getElementById("hora");
+    selectHora.innerHTML = '<option value="">Cargando horas...</option>';
+    fetch("/horas_disponibles?fecha=" + fecha)
+        .then(r => r.json())
+        .then(horas => {
+            selectHora.innerHTML = "";
+            if (horas.length === 0) {
+                selectHora.innerHTML = '<option value="">No hay horas disponibles</option>';
+            } else {
+                horas.forEach(h => {
+                    selectHora.innerHTML += `<option value="${h}">🕐 ${h}</option>`;
+                });
+            }
+        });
+});
+
+function abrirModal() {
+    const codigo = document.getElementById("input-codigo").value.trim();
+    if (!codigo) {
+        document.getElementById("input-codigo").focus();
+        return;
+    }
+    document.getElementById("modal-codigo").textContent = codigo;
+    document.getElementById("codigo-oculto").value = codigo;
+    document.getElementById("modal-overlay").style.display = "flex";
+}
+
+function cerrarModal() {
+    document.getElementById("modal-overlay").style.display = "none";
+}
+
+function confirmarCancelacion() {
+    document.getElementById("form-cancelar").submit();
+}
+</script>
+
+</body>
+</html>

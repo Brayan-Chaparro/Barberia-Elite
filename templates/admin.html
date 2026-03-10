@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin - Barbería Elite</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header>
+    <h1>🔐 Panel Administrador</h1>
+    <p>Barbería Elite — Gestión de citas</p>
+</header>
+
+<div class="container">
+
+    {% if not autenticado %}
+
+    <div class="card">
+        <h2>🔑 Iniciar Sesión</h2>
+        {% if error %}
+        <div class="alerta">{{ error }}</div>
+        {% endif %}
+        <form action="/admin" method="POST">
+            <label>Contraseña</label>
+            <input type="password" name="password" placeholder="Ingresa la contraseña" required>
+            <button type="submit" class="btn btn-reservar">Entrar</button>
+        </form>
+    </div>
+
+    {% else %}
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px;">
+        <a href="/" class="btn-logout">🏠 Volver al inicio</a>
+        <a href="/admin/logout" class="btn-logout">🚪 Cerrar sesión</a>
+    </div>
+
+    <div class="card">
+        <h2>📋 Todas las Citas</h2>
+
+        {% if citas %}
+        <table class="tabla-admin">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nombre</th>
+                    <th>Teléfono</th>
+                    <th>Servicio</th>
+                    <th>Fecha</th>
+                    <th>Hora</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cita in citas %}
+                <tr>
+                    <td><span class="badge-codigo">{{ cita.codigo }}</span></td>
+                    <td>{{ cita.nombre }}</td>
+                    <td>{{ cita.telefono }}</td>
+                    <td>{{ cita.servicio }}</td>
+                    <td>{{ cita.fecha }}</td>
+                    <td>{{ cita.hora }}</td>
+                    <td>
+                        <a href="/admin/cancelar/{{ cita.codigo }}"
+                            onclick="return confirm('¿Cancelar la cita de {{ cita.nombre }}?')"
+                            class="btn-eliminar">❌ Cancelar</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="no-citas">No hay citas registradas.</p>
+        {% endif %}
+    </div>
+
+    {% endif %}
+
+</div>
+
+<footer>
+    💈 Barbería Elite — Panel de Administración
+</footer>
+
+</body>
+</html>
