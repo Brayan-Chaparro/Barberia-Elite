@@ -3,6 +3,7 @@ import json
 import os
 import random
 from datetime import date
+from twilio.twiml.messaging_response import MessagingResponse
 
 app = Flask(__name__)
 app.secret_key = "barberia_elite_2026"
@@ -100,7 +101,6 @@ def cancelar():
     guardar_citas(nuevas)
     return redirect("/")
 
-# ADMIN
 @app.route("/admin", methods=["GET", "POST"])
 def admin():
     if request.method == "POST":
@@ -129,6 +129,37 @@ def admin_cancelar(codigo):
 def admin_logout():
     session.pop("admin", None)
     return redirect("/admin")
+
+@app.route("/whatsapp", methods=["POST"])
+def whatsapp():
+    mensaje = request.form.get("Body", "").strip().lower()
+    respuesta = MessagingResponse()
+    msg = respuesta.message()
+
+    if mensaje == "hola":
+        msg.body(
+            "💈 Bienvenido a Barbería Elite 💈\n\n"
+            "¿Qué deseas hacer?\n"
+            "1️⃣ Reservar cita\n"
+            "2️⃣ Cancelar cita\n"
+            "3️⃣ Ver precios\n"
+            "4️⃣ Horarios\n"
+            "5️⃣ Ubicación"
+        )
+    elif mensaje == "1":
+        msg.body("Para reservar tu cita ingresa aquí 👇\nhttps://web-production-4c95b.up.railway.app")
+    elif mensaje == "2":
+        msg.body("Para cancelar tu cita ingresa aquí 👇\nhttps://web-production-4c95b.up.railway.app")
+    elif mensaje == "3":
+        msg.body("💈 Nuestros precios:\n\n✂️ Corte - $15.000\n🪒 Barba - $10.000\n✂️🪒 Corte + Barba - $22.000")
+    elif mensaje == "4":
+        msg.body("🕐 Horarios:\n\nLunes a Sábado\n9:00am - 6:00pm")
+    elif mensaje == "5":
+        msg.body("📍 Ubicación:\n\nCalle 20 #15-30")
+    else:
+        msg.body("No entendí tu mensaje 😅\nEscribe *hola* para ver el menú.")
+
+    return str(respuesta)
 
 if __name__ == "__main__":
     app.run(debug=True)
